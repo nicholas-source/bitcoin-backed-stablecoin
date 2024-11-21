@@ -293,3 +293,8 @@
     (ok true)
   )
 )
+
+;; Read-only functions for transparency
+(define-read-only (get-vault-details (vault-owner principal) (vault-id uint))
+  (map-get? vaults {owner: vault-owner, id: vault-id})
+)
