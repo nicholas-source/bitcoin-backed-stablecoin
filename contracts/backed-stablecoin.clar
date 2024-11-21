@@ -40,3 +40,16 @@
     price: uint
   }
 )
+
+;; Vault structure
+(define-map vaults 
+  {
+    owner: principal, 
+    id: uint
+  }
+  {
+    collateral-amount: uint,  ;; BTC amount as collateral
+    stablecoin-minted: uint,  ;; Minted stablecoin amount
+    created-at: uint          ;; Timestamp of vault creation
+  }
+)
