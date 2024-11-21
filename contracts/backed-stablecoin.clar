@@ -242,3 +242,44 @@
     (ok true)
   )
 )
+
+;; Redemption mechanism
+(define-public (redeem-stablecoin 
+  (vault-owner principal)
+  (vault-id uint)
+  (redeem-amount uint)
+)
+  (let
+    (
+      ;; Retrieve vault details
+      (vault 
+        (unwrap! 
+          (map-get? vaults {owner: vault-owner, id: vault-id}) 
+          ERR-INVALID-PARAMETERS
+        )
+      )
+    )
+    
+    ;; Validate redemption amount
+    (asserts! 
+      (<= redeem-amount (get stablecoin-minted vault)) 
+      ERR-INSUFFICIENT-BALANCE
+    )
+    
+    ;; Update vault with redeemed amount
+    (map-set vaults {owner: vault-owner, id: vault-id}
+      {
+        collateral-amount: (get collateral-amount vault),
+        stablecoin-minted: (- (get stablecoin-minted vault) redeem-amount),
+        created-at: (get created-at vault)
+      }
+    )
+    
+    ;; Update total supply
+    (var-set total-supply 
+      (- (var-get total-supply) redeem-amount)
+    )
+    
+    (ok true)
+  )
+)
