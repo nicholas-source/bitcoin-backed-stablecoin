@@ -119,3 +119,72 @@
     (ok vault-id)
   )
 )
+
+;; Mint stablecoin
+(define-public (mint-stablecoin 
+  (vault-owner principal)
+  (vault-id uint)
+  (mint-amount uint)
+)
+  (let
+    (
+      ;; Retrieve vault details
+      (vault 
+        (unwrap! 
+          (map-get? vaults {owner: vault-owner, id: vault-id}) 
+          ERR-INVALID-PARAMETERS
+        )
+      )
+      
+      ;; Get latest BTC price
+      (btc-price 
+        (unwrap! (get-latest-btc-price) ERR-ORACLE-PRICE-UNAVAILABLE)
+      )
+      
+      ;; Calculate maximum mintable amount based on collateral
+      (max-mintable 
+        (/
+          (* 
+            (get collateral-amount vault) 
+            btc-price 
+          ) 
+          (var-get collateralization-ratio)
+        )
+      )
+    )
+    
+    ;; Validate minting conditions
+    (asserts! 
+      (>= 
+        max-mintable 
+        (+ (get stablecoin-minted vault) mint-amount)
+      ) 
+      ERR-UNDERCOLLATERALIZED
+    )
+    
+    ;; Check mint limit
+    (asserts! 
+      (<= 
+        (+ (get stablecoin-minted vault) mint-amount) 
+        (var-get max-mint-limit)
+      ) 
+      ERR-MINT-LIMIT-EXCEEDED
+    )
+    
+    ;; Update vault with minted amount
+    (map-set vaults {owner: vault-owner, id: vault-id}
+      {
+        collateral-amount: (get collateral-amount vault),
+        stablecoin-minted: (+ (get stablecoin-minted vault) mint-amount),
+        created-at: (get created-at vault)
+      }
+    )
+    
+    ;; Update total supply
+    (var-set total-supply 
+      (+ (var-get total-supply) mint-amount)
+    )
+    
+    (ok true)
+  )
+)
