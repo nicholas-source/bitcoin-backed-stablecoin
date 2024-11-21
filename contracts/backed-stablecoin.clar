@@ -3,8 +3,17 @@
 ;; description: 
 ;; This smart contract defines a Bitcoin-backed stablecoin system on the Stacks blockchain. It includes functionalities for creating vaults, minting stablecoins against Bitcoin collateral, redeeming stablecoins, and liquidating undercollateralized vaults. The contract also includes governance functions to update key parameters and read-only functions for transparency. Error codes and constants are defined for better error handling and configuration.
 
-;; Imports and constants
-(use-trait sip-010-token 'ST1HTBVD3FMGZH8N4ZTH5AQ7MWDXJ3MV7QRYQ8A4.sip-010-trait.sip-010-trait)
+;; Trait definition instead of import
+(define-trait sip-010-token
+  (
+    (transfer (uint principal principal (optional (buff 34))) (response bool uint))
+    (get-name () (response (string-ascii 32) uint))
+    (get-symbol () (response (string-ascii 5) uint))
+    (get-decimals () (response uint uint))
+    (get-balance (principal) (response uint uint))
+    (get-total-supply () (response uint uint))
+  )
+)
 
 ;; Error codes
 (define-constant ERR-NOT-AUTHORIZED (err u1000))
@@ -33,12 +42,12 @@
 
 ;; Oracles and price feeds
 (define-map btc-price-oracles principal bool)
-
 (define-map last-btc-price 
   {
     timestamp: uint,
     price: uint
   }
+  uint
 )
 
 ;; Vault structure
@@ -75,6 +84,7 @@
         timestamp: timestamp, 
         price: price
       }
+      price
     )
     (ok true)
   )
@@ -85,7 +95,7 @@
   (map-get? last-btc-price 
     {
       timestamp: (var-get block-height), 
-      price: (default-to u0 (get price (map-get? last-btc-price {timestamp: (var-get block-height), price: u0})))
+      price: u0
     }
   )
 )
@@ -146,7 +156,7 @@
         (/
           (* 
             (get collateral-amount vault) 
-            btc-price 
+            (get price btc-price)
           ) 
           (var-get collateralization-ratio)
         )
@@ -214,7 +224,7 @@
         (/
           (* 
             (get collateral-amount vault) 
-            btc-price 
+            (get price btc-price)
           ) 
           (get stablecoin-minted vault)
         )
