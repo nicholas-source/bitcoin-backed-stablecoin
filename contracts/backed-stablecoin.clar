@@ -30,3 +30,13 @@
 (define-data-var mint-fee-bps uint u50) ;; 0.5% minting fee
 (define-data-var redemption-fee-bps uint u50) ;; 0.5% redemption fee
 (define-data-var max-mint-limit uint u1000000) ;; Prevent excessive minting
+
+;; Oracles and price feeds
+(define-map btc-price-oracles principal bool)
+
+(define-map last-btc-price 
+  {
+    timestamp: uint,
+    price: uint
+  }
+)
