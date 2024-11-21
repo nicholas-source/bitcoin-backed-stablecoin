@@ -283,3 +283,13 @@
     (ok true)
   )
 )
+
+;; Governance functions
+(define-public (update-collateralization-ratio (new-ratio uint))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (and (>= new-ratio u100) (<= new-ratio u300)) ERR-INVALID-PARAMETERS)
+    (var-set collateralization-ratio new-ratio)
+    (ok true)
+  )
+)
