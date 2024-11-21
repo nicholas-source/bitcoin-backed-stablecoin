@@ -30,7 +30,7 @@
 
 ;; Stablecoin configuration
 (define-data-var stablecoin-name (string-ascii 32) "Bitcoin-Backed Stablecoin")
-(define-data-var stablecoin-symbol (string-ascii 5) "BTCS")  ;; Changed to 5 characters
+(define-data-var stablecoin-symbol (string-ascii 5) "BTCS")
 (define-data-var total-supply uint u0)
 (define-data-var collateralization-ratio uint u150) ;; 150% minimum collateral
 (define-data-var liquidation-threshold uint u125) ;; 125% liquidation starts
@@ -94,7 +94,7 @@
 (define-read-only (get-latest-btc-price)
   (map-get? last-btc-price 
     {
-      timestamp: (var-get block-height), 
+      timestamp: block-height,
       price: u0
     }
   )
@@ -148,7 +148,10 @@
       
       ;; Get latest BTC price
       (btc-price 
-        (unwrap! (get-latest-btc-price) ERR-ORACLE-PRICE-UNAVAILABLE)
+        (unwrap! 
+          (get-latest-btc-price) 
+          ERR-ORACLE-PRICE-UNAVAILABLE
+        )
       )
       
       ;; Calculate maximum mintable amount based on collateral
@@ -156,7 +159,7 @@
         (/
           (* 
             (get collateral-amount vault) 
-            (get price btc-price)
+            btc-price  ;; Direct use of price value
           ) 
           (var-get collateralization-ratio)
         )
@@ -216,7 +219,10 @@
       
       ;; Get latest BTC price
       (btc-price 
-        (unwrap! (get-latest-btc-price) ERR-ORACLE-PRICE-UNAVAILABLE)
+        (unwrap! 
+          (get-latest-btc-price) 
+          ERR-ORACLE-PRICE-UNAVAILABLE
+        )
       )
       
       ;; Current vault collateralization
@@ -224,7 +230,7 @@
         (/
           (* 
             (get collateral-amount vault) 
-            (get price btc-price)
+            btc-price  ;; Direct use of price value
           ) 
           (get stablecoin-minted vault)
         )
