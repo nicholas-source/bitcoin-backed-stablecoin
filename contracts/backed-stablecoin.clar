@@ -15,7 +15,7 @@
   )
 )
 
-;; Error codes
+;; Enhanced Error codes
 (define-constant ERR-NOT-AUTHORIZED (err u1000))
 (define-constant ERR-INSUFFICIENT-BALANCE (err u1001))
 (define-constant ERR-INVALID-COLLATERAL (err u1002))
@@ -24,6 +24,11 @@
 (define-constant ERR-LIQUIDATION-FAILED (err u1005))
 (define-constant ERR-MINT-LIMIT-EXCEEDED (err u1006))
 (define-constant ERR-INVALID-PARAMETERS (err u1007))
+(define-constant ERR-UNAUTHORIZED-VAULT-ACTION (err u1008))
+
+;; Security Constants
+(define-constant MAX-BTC-PRICE u1000000000000)  ;; Maximum reasonable BTC price
+(define-constant MAX-TIMESTAMP u18446744073709551615)  ;; Maximum uint timestamp
 
 ;; Contract owner
 (define-constant CONTRACT-OWNER tx-sender)
@@ -66,19 +71,40 @@
 ;; Vault counter
 (define-data-var vault-counter uint u0)
 
-;; Add BTC price oracle
+;; Enhanced Add BTC price oracle
 (define-public (add-btc-price-oracle (oracle principal))
   (begin
+    ;; Strict authorization check
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    
+    ;; Prevent adding zero address or contract owner as oracle
+    (asserts! (and 
+      (not (is-eq oracle CONTRACT-OWNER)) 
+      (not (is-eq oracle tx-sender))
+    ) ERR-INVALID-PARAMETERS)
+    
+    ;; Add oracle
     (map-set btc-price-oracles oracle true)
     (ok true)
   )
 )
 
-;; Update BTC price
+;; Enhanced Update BTC price
 (define-public (update-btc-price (price uint) (timestamp uint))
   (begin
+    ;; Validate oracle
     (asserts! (is-some (map-get? btc-price-oracles tx-sender)) ERR-NOT-AUTHORIZED)
+    
+    ;; Enhanced input validation
+    (asserts! (and 
+      (> price u0)  ;; Positive price
+      (<= price MAX-BTC-PRICE)  ;; Within reasonable bounds
+    ) ERR-INVALID-PARAMETERS)
+    
+    ;; Timestamp validation
+    (asserts! (<= timestamp MAX-TIMESTAMP) ERR-INVALID-PARAMETERS)
+    
+    ;; Update price
     (map-set last-btc-price 
       {
         timestamp: timestamp, 
@@ -100,7 +126,7 @@
   )
 )
 
-;; Create a new vault
+;; Enhanced Create a new vault
 (define-public (create-vault (collateral-amount uint))
   (let 
     (
@@ -112,7 +138,9 @@
         }
       )
     )
+    ;; Enhanced validation
     (asserts! (> collateral-amount u0) ERR-INVALID-COLLATERAL)
+    (asserts! (< vault-id (+ (var-get vault-counter) u1000)) ERR-INVALID-PARAMETERS) ;; Prevent excessive vault creation
     
     ;; Increment vault counter
     (var-set vault-counter vault-id)
@@ -130,7 +158,7 @@
   )
 )
 
-;; Mint stablecoin
+;; Enhanced Mint stablecoin
 (define-public (mint-stablecoin 
   (vault-owner principal)
   (vault-id uint)
@@ -165,6 +193,12 @@
         )
       )
     )
+    
+    ;; Enhanced authorization check
+    (asserts! (is-eq tx-sender vault-owner) ERR-UNAUTHORIZED-VAULT-ACTION)
+    
+    ;; Validate mint amount
+    (asserts! (> mint-amount u0) ERR-INVALID-PARAMETERS)
     
     ;; Validate minting conditions
     (asserts! 
@@ -202,7 +236,7 @@
   )
 )
 
-;; Liquidation mechanism
+;; Enhanced Liquidation mechanism
 (define-public (liquidate-vault 
   (vault-owner principal)
   (vault-id uint)
@@ -237,6 +271,9 @@
       )
     )
     
+    ;; Prevent self-liquidation
+    (asserts! (not (is-eq tx-sender vault-owner)) ERR-UNAUTHORIZED-VAULT-ACTION)
+    
     ;; Check if vault is liquidatable
     (asserts! 
       (< current-collateralization (var-get liquidation-threshold)) 
@@ -259,7 +296,7 @@
   )
 )
 
-;; Redemption mechanism
+;; Enhanced Redemption mechanism
 (define-public (redeem-stablecoin 
   (vault-owner principal)
   (vault-id uint)
@@ -276,7 +313,11 @@
       )
     )
     
+    ;; Validate sender
+    (asserts! (is-eq tx-sender vault-owner) ERR-UNAUTHORIZED-VAULT-ACTION)
+    
     ;; Validate redemption amount
+    (asserts! (> redeem-amount u0) ERR-INVALID-PARAMETERS)
     (asserts! 
       (<= redeem-amount (get stablecoin-minted vault)) 
       ERR-INSUFFICIENT-BALANCE
@@ -304,7 +345,13 @@
 (define-public (update-collateralization-ratio (new-ratio uint))
   (begin
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
-    (asserts! (and (>= new-ratio u100) (<= new-ratio u300)) ERR-INVALID-PARAMETERS)
+    (asserts! 
+      (and 
+        (>= new-ratio u100)  ;; Minimum 100%
+        (<= new-ratio u300)  ;; Maximum 300%
+      ) 
+      ERR-INVALID-PARAMETERS
+    )
     (var-set collateralization-ratio new-ratio)
     (ok true)
   )
