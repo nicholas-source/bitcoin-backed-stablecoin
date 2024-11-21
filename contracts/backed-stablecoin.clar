@@ -15,3 +15,13 @@
 (define-constant ERR-LIQUIDATION-FAILED (err u1005))
 (define-constant ERR-MINT-LIMIT-EXCEEDED (err u1006))
 (define-constant ERR-INVALID-PARAMETERS (err u1007))
+
+;; Contract owner
+(define-constant CONTRACT-OWNER tx-sender)
+
+;; Stablecoin configuration
+(define-data-var stablecoin-name (string-ascii 32) "Bitcoin-Backed Stablecoin")
+(define-data-var stablecoin-symbol (string-ascii 5) "BTCUSD")
+(define-data-var total-supply uint u0)
+(define-data-var collateralization-ratio uint u150) ;; 150% minimum collateral
+(define-data-var liquidation-threshold uint u125) ;; 125% liquidation starts
