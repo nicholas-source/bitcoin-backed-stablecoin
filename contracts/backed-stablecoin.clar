@@ -298,3 +298,7 @@
 (define-read-only (get-vault-details (vault-owner principal) (vault-id uint))
   (map-get? vaults {owner: vault-owner, id: vault-id})
 )
+
+(define-read-only (get-total-supply)
+  (var-get total-supply)
+)
