@@ -79,3 +79,13 @@
     (ok true)
   )
 )
+
+;; Get latest BTC price
+(define-read-only (get-latest-btc-price)
+  (map-get? last-btc-price 
+    {
+      timestamp: (var-get block-height), 
+      price: (default-to u0 (get price (map-get? last-btc-price {timestamp: (var-get block-height), price: u0})))
+    }
+  )
+)
