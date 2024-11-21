@@ -53,3 +53,15 @@
     created-at: uint          ;; Timestamp of vault creation
   }
 )
+
+;; Vault counter
+(define-data-var vault-counter uint u0)
+
+;; Add BTC price oracle
+(define-public (add-btc-price-oracle (oracle principal))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (map-set btc-price-oracles oracle true)
+    (ok true)
+  )
+)
