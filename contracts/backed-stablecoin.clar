@@ -65,3 +65,17 @@
     (ok true)
   )
 )
+
+;; Update BTC price
+(define-public (update-btc-price (price uint) (timestamp uint))
+  (begin
+    (asserts! (is-some (map-get? btc-price-oracles tx-sender)) ERR-NOT-AUTHORIZED)
+    (map-set last-btc-price 
+      {
+        timestamp: timestamp, 
+        price: price
+      }
+    )
+    (ok true)
+  )
+)
