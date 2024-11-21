@@ -166,6 +166,14 @@
 )
   (let
     (
+      ;; Validate vault-id before any other operations
+      (is-valid-vault-id 
+        (and 
+          (> vault-id u0)  ;; Vault ID must be positive
+          (<= vault-id (var-get vault-counter))  ;; Must not exceed current vault counter
+        )
+      )
+      
       ;; Retrieve vault details
       (vault 
         (unwrap! 
@@ -193,6 +201,9 @@
         )
       )
     )
+    
+    ;; Vault ID validation check
+    (asserts! is-valid-vault-id ERR-INVALID-PARAMETERS)
     
     ;; Enhanced authorization check
     (asserts! (is-eq tx-sender vault-owner) ERR-UNAUTHORIZED-VAULT-ACTION)
@@ -243,6 +254,14 @@
 )
   (let
     (
+      ;; Validate vault-id before any other operations
+      (is-valid-vault-id 
+        (and 
+          (> vault-id u0)  ;; Vault ID must be positive
+          (<= vault-id (var-get vault-counter))  ;; Must not exceed current vault counter
+        )
+      )
+      
       ;; Retrieve vault details
       (vault 
         (unwrap! 
@@ -270,6 +289,9 @@
         )
       )
     )
+    
+    ;; Vault ID validation check
+    (asserts! is-valid-vault-id ERR-INVALID-PARAMETERS)
     
     ;; Prevent self-liquidation
     (asserts! (not (is-eq tx-sender vault-owner)) ERR-UNAUTHORIZED-VAULT-ACTION)
@@ -304,6 +326,14 @@
 )
   (let
     (
+      ;; Validate vault-id before any other operations
+      (is-valid-vault-id 
+        (and 
+          (> vault-id u0)  ;; Vault ID must be positive
+          (<= vault-id (var-get vault-counter))  ;; Must not exceed current vault counter
+        )
+      )
+      
       ;; Retrieve vault details
       (vault 
         (unwrap! 
@@ -312,6 +342,9 @@
         )
       )
     )
+    
+    ;; Vault ID validation check
+    (asserts! is-valid-vault-id ERR-INVALID-PARAMETERS)
     
     ;; Validate sender
     (asserts! (is-eq tx-sender vault-owner) ERR-UNAUTHORIZED-VAULT-ACTION)
