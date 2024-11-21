@@ -30,7 +30,7 @@
 
 ;; Stablecoin configuration
 (define-data-var stablecoin-name (string-ascii 32) "Bitcoin-Backed Stablecoin")
-(define-data-var stablecoin-symbol (string-ascii 5) "BTCUSD")
+(define-data-var stablecoin-symbol (string-ascii 5) "BTCS")  ;; Changed to 5 characters
 (define-data-var total-supply uint u0)
 (define-data-var collateralization-ratio uint u150) ;; 150% minimum collateral
 (define-data-var liquidation-threshold uint u125) ;; 125% liquidation starts
